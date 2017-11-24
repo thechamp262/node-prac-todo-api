@@ -8,6 +8,8 @@ let {Users} = require('./models/user');
 
 let app = express();
 
+const {ObjectID} = require('mongodb');
+
 app.use(bodyParser.json());
 
 app.post('/todos',function(req,res){
@@ -26,6 +28,22 @@ app.get('/todos',function(req,res){
     res.send({todos})
   },function(e){
     res.status(400).send(e);
+  })
+})
+
+// GET /todos/12434
+app.get('/todos/:id',function(req,res){
+  let id = req.params.id;
+  if(!ObjectID.isValid(id)){
+    return res.status(404).send('The Id was invalid!');
+  }
+  Todo.findById(id).then(function(todo){
+    if(!todo){
+      return res.status(404).send('The Id was not found!');
+    }
+      res.send({todo})
+  },function(e){
+      res.status(400).send(e);
   })
 })
 
