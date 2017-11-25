@@ -43,8 +43,8 @@ app.get('/todos/:id',function(req,res){
       return res.status(404).send('The Id was not found!');
     }
       res.send({todo})
-  },function(e){
-      res.status(400).send(e);
+  }).catch(function(e){
+      res.status(400).send();
   })
 })
 
