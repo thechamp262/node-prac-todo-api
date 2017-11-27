@@ -6,7 +6,8 @@ const {mongoose} = require('./db/mongoose');
 
 let {Todo} = require('./models/todo');
 let {Users} = require('./models/user');
-
+let {authenticate} = require('./middleware/authenticate');
+      
 let app = express();
 const port = process.env.PORT;
 
@@ -89,6 +90,11 @@ app.patch('/todos/:id',function(req,res){
     res.status(400).send();
   })
 })
+
+
+app.get('/user/me',authenticate,function(req,res){
+  res.send(req.user);
+});
 
 //User code started here
 
