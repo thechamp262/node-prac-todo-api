@@ -90,6 +90,22 @@ app.patch('/todos/:id',function(req,res){
   })
 })
 
+//User code started here
+
+app.post('/user',function(req,res){
+    let body = _.pick(req.body,['email'],['password']);
+    let user = new Users(body);
+
+    user.save().then(function(){
+      return user.generateAuthToken();
+
+    }).then(function(token){
+      res.header('x-auth',token).send(user)
+    }).catch(function(e){
+      res.status(400).send(e);
+    })
+});
+
 app.listen(port,function(){
   console.log(`Started on at port ${port}`);
 });
