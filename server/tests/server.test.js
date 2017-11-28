@@ -291,3 +291,23 @@ describe("POST /user/login", function(){
     })
   })
 })
+
+describe("DELETE /user/me/token",function(){
+  it("Should remove auth token on logout",function(done){
+    request(app)
+    .delete("/user/me/token")
+    .set('x-auth', users[0].tokens[0].token)
+    .expect(200)
+    .end(function(e,res){
+        if(e){
+          done(e);
+        }
+        Users.findById(users[0]._id).then(function(user){
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch(function(e){
+            done(e);
+        })
+      })
+    })
+  })
