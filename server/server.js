@@ -125,6 +125,14 @@ Users.findByCredentials(body.email,body.password).then(function(user){
 //res.send(body);
 })
 
+app.delete('/user/me/token',authenticate,function(req,res){
+  req.user.removeToken(req.token).then(function(){
+    res.status(200).send();
+  },function(){
+    res.status(400).send();
+  })
+})
+
 app.listen(port,function(){
   console.log(`Started on at port ${port}`);
 });
