@@ -215,6 +215,8 @@ describe("POST /user",function(){
         expect(user).toExist();
         expect(user.password).toNotBe(password);
         done();
+      }).catch(function(e){
+        done(e);
       })
     })
   })
@@ -235,5 +237,57 @@ describe("POST /user",function(){
     .send({email,password})
     .expect(400)
     .end(done)
+  })
+})
+
+describe("POST /user/login", function(){
+  it("Should login user and return auth token",function(done){
+    request(app)
+    .post("/user/login")
+    .send({
+      email: users[1].email,
+      password: users[1].password
+    })
+    .expect(200)
+    .expect(function(res){
+      expect(res.header['x-auth']).toExist();
+    })
+    .end(function(e,res){
+      if(e){
+        return done(e);
+      }
+      Users.findById(users[1]._id).then(function(user){
+        expect(user.tokens[0]).toInclude({
+          access: "auth",
+          token: res.headers["x-auth"]
+        })
+        done();
+      }).catch(function(e){
+        done(e);
+      })
+    })
+  })
+  it("Should reject invalid login",function(done){
+    request(app)
+    .post("/user/login")
+    .send({
+      email: users[1].email,
+      password: "thisisthewrongpassword"
+    })
+    .expect(400)
+    .expect(function(res){
+      expect(res.header['x-auth']).toNotExist();
+    })
+    .end(function(e,res){
+      if(e){
+        return done(e);
+      }
+      Users.findById(users[1]._id).then(function(user){
+        expect(user.tokens.length).toEqual(0);
+        done();
+      }).catch(function(e){
+        done(e);
+      })
+    })
   })
 })
