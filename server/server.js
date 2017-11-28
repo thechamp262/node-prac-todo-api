@@ -7,7 +7,7 @@ const {mongoose} = require('./db/mongoose');
 let {Todo} = require('./models/todo');
 let {Users} = require('./models/user');
 let {authenticate} = require('./middleware/authenticate');
-      
+
 let app = express();
 const port = process.env.PORT;
 
@@ -111,6 +111,19 @@ app.post('/user',function(req,res){
       res.status(400).send(e);
     })
 });
+
+app.post('/user/login',function(req,res){
+let body = _.pick(req.body,['email'],['password']);
+
+Users.findByCredentials(body.email,body.password).then(function(user){
+  return user.generateAuthToken().then(function(token){
+    res.header('x-auth',token).send(user);
+  })
+}).catch(function(e){
+    res.status(400).send();
+})
+//res.send(body);
+})
 
 app.listen(port,function(){
   console.log(`Started on at port ${port}`);
