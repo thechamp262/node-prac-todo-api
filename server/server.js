@@ -15,9 +15,10 @@ const {ObjectID} = require('mongodb');
 
 app.use(bodyParser.json());
 
-app.post('/todos',function(req,res){
+app.post('/todos',authenticate,function(req,res){
   let todo = new Todo({
-    text: req.body.text
+    text: req.body.text,
+    _creator: req.user._id
   });
   todo.save().then(function(doc){
     res.send(doc);
@@ -26,8 +27,10 @@ app.post('/todos',function(req,res){
   })
 });
 
-app.get('/todos',function(req,res){
-  Todo.find().then(function(todos){
+app.get('/todos',authenticate,function(req,res){
+  Todo.find({
+    _creator: req.user._id
+  }).then(function(todos){
     res.send({todos})
   },function(e){
     res.status(400).send(e);
@@ -35,12 +38,15 @@ app.get('/todos',function(req,res){
 })
 
 // GET /todos/12434
-app.get('/todos/:id',function(req,res){
+app.get('/todos/:id',authenticate,function(req,res){
   let id = req.params.id;
   if(!ObjectID.isValid(id)){
     return res.status(404).send('The Id was invalid!');
   }
-  Todo.findById(id).then(function(todo){
+  Todo.findOne({
+    _id: id,
+    _creator: req.user._id
+  }).then(function(todo){
     if(!todo){
       return res.status(404).send('The Id was not found!');
     }
@@ -50,15 +56,18 @@ app.get('/todos/:id',function(req,res){
   })
 })
 
-app.delete('/todos/:id',function(req,res){
+app.delete('/todos/:id',authenticate,function(req,res){
   let id = req.params.id;
   console.log(`This is the id: ${id}`);
   if(!ObjectID.isValid(id)){
     return res.status(404).send('The is was invalid!')
   }
-  Todo.findByIdAndRemove(id).then(function(todo){
+  Todo.findOneAndRemove({
+    _id: id,
+    _creator: req.user._id
+  }).then(function(todo){
     if(!todo){
-      return res.status(404).send('The id was not found!');
+      return res.status(404).send();
     }
       res.send({todo});
   }).catch(function(e){
@@ -66,12 +75,12 @@ app.delete('/todos/:id',function(req,res){
   })
 })
 
-app.patch('/todos/:id',function(req,res){
+app.patch('/todos/:id',authenticate,function(req,res){
   let id = req.params.id;
   let body = _.pick(req.body,['text'],['completed']);
 
   if(!ObjectID.isValid(id)){
-    return res.status(404).send('The is was invalid!')
+    return res.status(404).send();
   }
 
   if(_.isBoolean(body.completed) && body.completed){
@@ -81,7 +90,10 @@ app.patch('/todos/:id',function(req,res){
     body.completedAt = null;
   }
 
-  Todo.findByIdAndUpdate(id,{$set: body},{new: true}).then(function(todo){
+  Todo.findOneAndUpdate({
+    _id: id,
+    _creator: req.user._id
+  },{$set: body},{new: true}).then(function(todo){
     if(!todo){
       return res.status(404).send();
     }
